@@ -9,51 +9,71 @@ class SCMRP
 {
     static void Main()
     {
-        string connectionString = "Host=localhost;Username=postgres;Password=postgres;Database=postgres";
+        
+        string connectionString = "Host=localhost;Username=postgres;Password=Mzkwcim181099!;Database=postgres";
         Dictionary<string, double> RudolphTableValues = new Dictionary<string, double>();
 
         double[] wo = ConvertToDouble(Record());
-        string[] distancesarray = new string[] { "50mfreestyle", "100mFreestyle", "200mFreestyle", "400mFreestyle", "800mFreestyle", "1500mFreestyle", "50mBackstroke", "100mBackstroke", "200mBackstroke", "50mBreaststroke", "100mBreaststroke", "200mBreaststroke", "50mButterfly", "100mButterfly", "200mButterfly", "100mMedley", "200mMedley", "400mMedley" };
+        string[] distancesarray = GettingDistances();
         List<double> records = new List<double>(wo);
         List<string> distances = new List<string>();
         records.Remove(21.75);
         string pomocnik = "REAL";
 
-        string createTableQuery = "CREATE TABLE WorldRecords (" +
-                          "ID SERIAL PRIMARY KEY, " +
-                          $"\"{distancesarray[0]}\" {pomocnik}, " +
-                          $"\"{distancesarray[1]}\" {pomocnik}, " +
-                          $"\"{distancesarray[2]}\" {pomocnik}, " +
-                          $"\"{distancesarray[3]}\" {pomocnik}, " +
-                          $"\"{distancesarray[4]}\" {pomocnik}, " +
-                          $"\"{distancesarray[5]}\" {pomocnik}, " +
-                          $"\"{distancesarray[6]}\" {pomocnik}, " +
-                          $"\"{distancesarray[7]}\" {pomocnik}," +
-                          $"\"{distancesarray[8]}\" {pomocnik}, " +
-                          $"\"{distancesarray[9]}\" {pomocnik}, " +
-                          $"\"{distancesarray[10]}\" {pomocnik}, " +
-                          $"\"{distancesarray[11]}\" {pomocnik}," +
-                          $"\"{distancesarray[12]}\" {pomocnik}, " +
-                          $"\"{distancesarray[13]}\" {pomocnik}, " +
-                          $"\"{distancesarray[14]}\" {pomocnik}, " +
-                          $"\"{distancesarray[15]}\" {pomocnik}, " +
-                          $"\"{distancesarray[16]}\" {pomocnik}, " +
-                          $"\"{distancesarray[17]}\" {pomocnik});";
+        string createTableQueryTest = "CREATE TABLE WorldRecords (" +
+                          "ID SERIAL PRIMARY KEY, ";
+        for (int i = 0; i < distancesarray.Length; i++)
+        {
+            if (i < distancesarray.Length - 1)
+            {
+                createTableQueryTest += $"\"{distancesarray[i]}\" {pomocnik}, ";
+            }
+            else
+            {
+                createTableQueryTest += $"\"{distancesarray[i]}\" {pomocnik} )";
+            }
+        }
 
-        string addValuesQuery = $"INSERT INTO WorldRecords(\"{distancesarray[0]}\", \"{distancesarray[1]}\", \"{distancesarray[2]}\", \"{distancesarray[3]}\", \"{distancesarray[4]}\", \"{distancesarray[5]}\", \"{distancesarray[6]}\", \"{distancesarray[7]}\", \"{distancesarray[8]}\", \"{distancesarray[9]}\", \"{distancesarray[10]}\", \"{distancesarray[11]}\", \"{distancesarray[12]}\", \"{distancesarray[13]}\", \"{distancesarray[14]}\", \"{distancesarray[15]}\", \"{distancesarray[16]}\", \"{distancesarray[17]}\")" +
-            $"VALUES ({records[0]}, {records[1]}, {records[2]}, {records[3]}, {records[4]}, {records[5]}, {records[6]}, {records[7]}, {records[8]}, {records[9]}, {records[10]}, {records[11]}, {records[12]}, {records[13]}, {records[14]}, {records[15]}, {records[16]}, {records[17]});";
+
+        string addValuesQueryTest = "INSERT INTO WorldRecords(";
+        for (int i = 0;i < distancesarray.Length; i++)
+        {
+            if (i < distancesarray.Length - 1)
+            {
+                addValuesQueryTest += $"\"{distancesarray[i]}\", ";
+            }
+            else
+            {
+                addValuesQueryTest += $"\"{distancesarray[i]}\" ) VALUES (";
+            }
+        }
+        for (int i = 0; i < records.Count; i++)
+        {
+            if (i < records.Count-1)
+            {
+                addValuesQueryTest += $"{records[i]}, ";
+            }
+            else
+            {
+                addValuesQueryTest += $"{records[i]} ";
+            }
+            
+        }
+        addValuesQueryTest += ");";
+
+       
 
         using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
         {
             try
             {
                 connection.Open();
-                using (NpgsqlCommand command = new NpgsqlCommand(createTableQuery, connection))
+                using (NpgsqlCommand command = new NpgsqlCommand(createTableQueryTest, connection))
                 {
                     command.ExecuteNonQuery();
                     Console.WriteLine("Powodzenie");
                 }
-                using (NpgsqlCommand command2 = new NpgsqlCommand(addValuesQuery, connection))
+                using (NpgsqlCommand command2 = new NpgsqlCommand(addValuesQueryTest, connection))
                 {
                     command2.ExecuteNonQuery();
                     Console.WriteLine("Powodzenie");
@@ -63,9 +83,8 @@ class SCMRP
             {
                 Console.WriteLine($"Błąd: {e.Message}");
             }
-        }
+        }  
     }
-
     public static string[] Distances()
     {
         string url = "https://www.swimrankings.net/index.php?page=recordDetail&recordListId=50001&genderCourse=SCM_1";
@@ -173,5 +192,32 @@ class SCMRP
             }
         }
         return times;
+    }
+
+    public static string[] GettingDistances()
+    {
+        string url = "https://www.swimrankings.net/index.php?page=rankingDetail&club=POL";
+        var httpClient = new HttpClient();
+        var html = httpClient.GetStringAsync(url).Result;
+        var htmlDocument = new HtmlDocument();
+        htmlDocument.LoadHtml(html);
+        var Distance = htmlDocument.DocumentNode.SelectNodes("//tr[@class='rankingList0']//td[@class='swimstyle']//a");
+        var Distance1 = htmlDocument.DocumentNode.SelectNodes("//tr[@class='rankingList1']//td[@class='swimstyle']//a");
+        string[] tab = new string[18];
+        for (int i = 0; i < tab.Length; i++)
+        {
+            if (i % 2 == 0)
+            {
+                string dziwak = Distance[i/2].InnerText.Trim();
+                tab[i] = dziwak;
+            }
+            else if (i % 2 == 1)
+            {
+                string dziwak = Distance1[i / 2].InnerText.Trim();
+                tab[i] = dziwak;
+            }
+        }
+        return tab;
+
     }
 }
