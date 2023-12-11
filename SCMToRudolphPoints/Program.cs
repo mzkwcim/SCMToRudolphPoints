@@ -10,7 +10,7 @@ class SCMRP
     static void Main()
     {
         
-        string connectionString = "Host=localhost;Username=postgres;Password=Mzkwcim181099!;Database=postgres";
+        string connectionString = "Host=localhost;Username=postgres;Password=postgres;Database=postgres";
         Dictionary<string, double> RudolphTableValues = new Dictionary<string, double>();
 
         double[] wo = ConvertToDouble(Record());
